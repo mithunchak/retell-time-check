@@ -15,11 +15,11 @@ TIMEZONE = "Asia/Kolkata"  # Set to India Standard Time (GMT+5:30)
 def home():
     return jsonify({
         "status": "API is running", 
-        "endpoints": ["/check_enrollment_hours", "/set_enrollment_hours"]
+        "endpoints": ["/check_enrollment_availability"]
     })
 
-@app.route('/check_enrollment_hours', methods=['GET'])
-def check_enrollment_hours():
+@app.route('/check_enrollment_availability', methods=['GET', 'POST'])
+def check_enrollment_availability():
     try:
         timezone = pytz.timezone(TIMEZONE)
         current_datetime = datetime.now(timezone)
@@ -29,7 +29,7 @@ def check_enrollment_hours():
         # Check if the current day is an enrollment day
         is_enrollment_day = current_day in ENROLLMENT_DAYS
         
-        # Parse start and end times for enrollment hours (in IST)
+        # Parse start and end times for enrollment hours
         start_time = datetime.strptime(START_TIME, "%I:%M %p").time()
         end_time = datetime.strptime(END_TIME, "%I:%M %p").time()
         
@@ -39,30 +39,15 @@ def check_enrollment_hours():
         # Single boolean response that's true only if both conditions are met
         is_correct_time_to_enroll = is_enrollment_day and is_enrollment_time
         
+        # Format response for Retell AI
         return jsonify({
-            "is_correct_time_to_enroll": is_correct_time_to_enroll
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/set_enrollment_hours', methods=['POST'])
-def set_enrollment_hours():
-    try:
-        data = request.get_json()
-        global ENROLLMENT_DAYS, START_TIME, END_TIME
-        
-        # Update enrollment days, hours, and timezone
-        if "enrollment_days" in data:
-            ENROLLMENT_DAYS = data.get("enrollment_days")
-        if "start_time" in data:
-            START_TIME = data.get("start_time")
-        if "end_time" in data:
-            END_TIME = data.get("end_time")
-        
-        return jsonify({
-            "message": "Enrollment settings updated successfully.",
+            "is_correct_time_to_enroll": is_correct_time_to_enroll,
             "enrollment_days": ENROLLMENT_DAYS,
             "enrollment_hours": f"{START_TIME} to {END_TIME}"
         })
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
