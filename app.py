@@ -28,23 +28,19 @@ def check_enrollment_hours():
         
         # Check if the current day is an enrollment day
         is_enrollment_day = current_day in ENROLLMENT_DAYS
-
+        
         # Parse start and end times for enrollment hours (in IST)
         start_time = datetime.strptime(START_TIME, "%I:%M %p").time()
         end_time = datetime.strptime(END_TIME, "%I:%M %p").time()
-
+        
         # Check if current time is within enrollment hours
         is_enrollment_time = start_time <= current_time <= end_time
-
+        
+        # Single boolean response that's true only if both conditions are met
+        is_correct_time_to_enroll = is_enrollment_day and is_enrollment_time
+        
         return jsonify({
-            "is_enrollment_day": is_enrollment_day,
-            "is_enrollment_time": is_enrollment_time,
-            "is_within_hours": is_enrollment_day and is_enrollment_time,
-            "current_day": current_day,
-            "current_time": current_datetime.strftime("%I:%M %p"),
-            "enrollment_days": ENROLLMENT_DAYS,
-            "enrollment_hours": f"{START_TIME} to {END_TIME}",
-            "timezone": TIMEZONE
+            "is_correct_time_to_enroll": is_correct_time_to_enroll
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -56,15 +52,17 @@ def set_enrollment_hours():
         global ENROLLMENT_DAYS, START_TIME, END_TIME
         
         # Update enrollment days, hours, and timezone
-        ENROLLMENT_DAYS = data.get("enrollment_days", ENROLLMENT_DAYS)
-        START_TIME = data.get("start_time", START_TIME)
-        END_TIME = data.get("end_time", END_TIME)
+        if "enrollment_days" in data:
+            ENROLLMENT_DAYS = data.get("enrollment_days")
+        if "start_time" in data:
+            START_TIME = data.get("start_time")
+        if "end_time" in data:
+            END_TIME = data.get("end_time")
         
         return jsonify({
             "message": "Enrollment settings updated successfully.",
             "enrollment_days": ENROLLMENT_DAYS,
-            "enrollment_hours": f"{START_TIME} to {END_TIME}",
-            "timezone": TIMEZONE
+            "enrollment_hours": f"{START_TIME} to {END_TIME}"
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 400
