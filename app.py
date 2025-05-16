@@ -9,7 +9,7 @@ app = Flask(__name__)
 ENROLLMENT_DAYS = os.getenv("ENROLLMENT_DAYS", "Monday,Wednesday,Friday").split(",")
 START_TIME = os.getenv("START_TIME", "10:00 AM")
 END_TIME = os.getenv("END_TIME", "3:00 PM")
-TIMEZONE = os.getenv("TIMEZONE", "Asia/Kolkata")  # Change this to your desired timezone
+TIMEZONE = "Asia/Kolkata"  # Set to India Standard Time (GMT+5:30)
 
 @app.route('/', methods=['GET'])
 def home():
@@ -20,7 +20,7 @@ def home():
 
 @app.route('/check_enrollment_hours', methods=['GET'])
 def check_enrollment_hours():
-    # Convert current time to the specified timezone
+    # Convert current time to the specified timezone (IST)
     timezone = pytz.timezone(TIMEZONE)
     current_datetime = datetime.now(timezone)
     current_day = current_datetime.strftime("%A")
@@ -29,7 +29,7 @@ def check_enrollment_hours():
     # Check if the current day is an enrollment day
     is_enrollment_day = current_day in ENROLLMENT_DAYS
 
-    # Parse start and end times for enrollment hours (in the same timezone)
+    # Parse start and end times for enrollment hours (in IST)
     start_time = datetime.strptime(START_TIME, "%I:%M %p").time()
     end_time = datetime.strptime(END_TIME, "%I:%M %p").time()
 
@@ -61,7 +61,9 @@ def set_enrollment_hours():
         ENROLLMENT_DAYS = data.get("enrollment_days", ENROLLMENT_DAYS)
         START_TIME = data.get("start_time", START_TIME)
         END_TIME = data.get("end_time", END_TIME)
-        TIMEZONE = data.get("timezone", TIMEZONE)
+        
+        # Enforce India timezone (Asia/Kolkata)
+        TIMEZONE = "Asia/Kolkata"
         
         return jsonify({
             "message": "Enrollment settings updated successfully.",
